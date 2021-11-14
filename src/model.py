@@ -14,6 +14,13 @@ DATADIR = "PetImages"
 CATEGORIES = ["Dog", "Cat"]
 IMG_SIZE = 100
 
+class Accuracy:
+    def __init__(self, acc: float, category):
+        '''Se la categoria è `gatto` allora la percentuale rimarrà la stessa
+        Invece, se è `cane` allora deve essere invertita la percentuale'''
+        self.cat = acc if category == "Cat" else 1 - acc
+        self.dog = acc if category == "Cat" else 1 - acc 
+
 # per scaricare il dataset vai su:
 # https://www.microsoft.com/en-us/download/confirmation.aspx?id=54765
 
@@ -45,7 +52,7 @@ async def train():
         y.append(label)
     x = np.array(x).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
     x = x / 255.0
-    x = np.array(x)
+    x = np.array(x)  # bisogna ricreare l'array
     y = np.array(y)
     model = Sequential()
     model.add(Conv2D(64, (3, 3), input_shape=x.shape[1:]))
@@ -68,9 +75,7 @@ async def train():
     model.add(Flatten())  # questo converte la nostra mappa delle feature in 3D ad un vettore di feature in 1D
     model.add(Dense(1))
     model.add(Activation('sigmoid'))
-    model.compile(loss='binary_crossentropy',
-                optimizer='adam',
-                metrics=['accuracy'])
+    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.fit(x, y, batch_size=32, epochs=10, validation_split=0.3)
     model.save("cat_or_dog.model")
     return model
@@ -84,16 +89,17 @@ async def get_model():
 
 async def predict(model: Sequential, filepath):
     prediction = model.predict([await prepare_data(filepath)])
-    return CATEGORIES[round(prediction[0][0])], prediction[0][0]
+    category = CATEGORIES[round(prediction[0][0])]
+    return category, Accuracy(prediction[0][0], category)
 
 
 # test
 async def test():
     model = await get_model()
     prediction = await predict(model, "./dog_0.jpg")
-    print(f"Type expected: Dog; Acc: {(1 - prediction[1]) * 100: .2f}%")
+    print(f"Type expected: Dog; Acc: {prediction[1].dog * 100: .2f}%")
     prediction = await predict(model, "./cat_0.jpg")
-    print(f"Type expected: Cat; Acc: {prediction[1] * 100: .2f}%")
+    print(f"Type expected: Cat; Acc: {prediction[1].cat * 100: .2f}%")
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
