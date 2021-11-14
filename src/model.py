@@ -24,12 +24,12 @@ class Accuracy:
 # per scaricare il dataset vai su:
 # https://www.microsoft.com/en-us/download/confirmation.aspx?id=54765
 
-async def prepare_data(filepath):
+def prepare_data(filepath):
     img_array = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)  # legge l'immagine e la converte in scala grigi
     new_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))  # ridimensiona l'immagine per ottenere le dimensioni che si aspetta il modello
     return new_array.reshape(-1, IMG_SIZE, IMG_SIZE, 1)  # ritorna l'immagine con la forma che si aspetta il modello
 
-async def create_training_data():
+def create_training_data():
     training_data = []
     for category in CATEGORIES:  # cani e gatti
         path = os.path.join(DATADIR,category)  # crea un percorso ai cani e gatti
@@ -44,10 +44,10 @@ async def create_training_data():
     random.shuffle(training_data)  # mischia i dati per evitare che il modello venga allenato male
     return training_data
 
-async def train():
+def train():
     x = []
     y = []
-    for features, label in await create_training_data():
+    for features, label in create_training_data():
         x.append(features)
         y.append(label)
     x = np.array(x).reshape(-1, IMG_SIZE, IMG_SIZE, 1)
@@ -80,25 +80,25 @@ async def train():
     model.save("cat_or_dog.model")
     return model
 
-async def get_model():
+def get_model():
     if not os.path.exists("cat_or_dog.model"):
-        model = await train()
+        model = train()
     else:
         model = tf.keras.models.load_model("cat_or_dog.model")
     return model
 
-async def predict(model: Sequential, filepath):
-    prediction = model.predict([await prepare_data(filepath)])
+def predict(model: Sequential, filepath):
+    prediction = model.predict([prepare_data(filepath)])
     category = CATEGORIES[round(prediction[0][0])]
     return category, Accuracy(prediction[0][0], category)
 
 
 # test
-async def test():
-    model = await get_model()
-    prediction = await predict(model, "./dog_0.jpg")
+def test():
+    model = get_model()
+    prediction = predict(model, "./dog_0.jpg")
     print(f"Type expected: Dog; Acc: {prediction[1].dog * 100: .2f}%")
-    prediction = await predict(model, "./cat_0.jpg")
+    prediction = predict(model, "./cat_0.jpg")
     print(f"Type expected: Cat; Acc: {prediction[1].cat * 100: .2f}%")
 
 if __name__ == "__main__":
