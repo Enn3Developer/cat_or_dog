@@ -90,9 +90,9 @@ async def predict(model: Sequential, filepath):
 # test
 async def test():
     model = await get_model()
-    prediction = await predict(model, f"{DATADIR}/Dog/1241.jpg")
+    prediction = await predict(model, "./dog_0.jpg")
     print(f"Type expected: Dog; Acc: {(1 - prediction[1]) * 100: .2f}%")
-    prediction = await predict(model, f"{DATADIR}/Cat/10032.jpg")
+    prediction = await predict(model, "./cat_0.jpg")
     print(f"Type expected: Cat; Acc: {prediction[1] * 100: .2f}%")
 
 if __name__ == "__main__":
