@@ -1,7 +1,6 @@
 import asyncio
 import numpy as np
 import os
-import sys
 import cv2
 from tqdm import tqdm
 import random
@@ -14,35 +13,56 @@ DATADIR = "PetImages"
 CATEGORIES = ["Dog", "Cat"]
 IMG_SIZE = 100
 
+
 class Accuracy:
     def __init__(self, acc: float, category):
-        '''Se la categoria è `gatto` allora la percentuale rimarrà la stessa
-        Invece, se è `cane` allora deve essere invertita la percentuale'''
+        """Se la categoria è `gatto` allora la percentuale rimarrà la stessa
+        Invece, se è `cane` allora deve essere invertita la percentuale"""
         self.cat = acc if category == "Cat" else 1 - acc
-        self.dog = acc if category == "Cat" else 1 - acc 
+        self.dog = acc if category == "Cat" else 1 - acc
+
 
 # per scaricare il dataset vai su:
 # https://www.microsoft.com/en-us/download/confirmation.aspx?id=54765
 
+
 def prepare_data(filepath):
-    img_array = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)  # legge l'immagine e la converte in scala grigi
-    new_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))  # ridimensiona l'immagine per ottenere le dimensioni che si aspetta il modello
-    return new_array.reshape(-1, IMG_SIZE, IMG_SIZE, 1)  # ritorna l'immagine con la forma che si aspetta il modello
+    img_array = cv2.imread(
+        filepath, cv2.IMREAD_GRAYSCALE
+    )  # legge l'immagine e la converte in scala grigi
+    new_array = cv2.resize(
+        img_array, (IMG_SIZE, IMG_SIZE)
+    )  # ridimensiona l'immagine per ottenere le dimensioni che si aspetta il modello
+    return new_array.reshape(
+        -1, IMG_SIZE, IMG_SIZE, 1
+    )  # ritorna l'immagine con la forma che si aspetta il modello
+
 
 def create_training_data():
     training_data = []
     for category in CATEGORIES:  # cani e gatti
-        path = os.path.join(DATADIR,category)  # crea un percorso ai cani e gatti
-        class_num = CATEGORIES.index(category)  # ricevi una classificazione (0 o 1). 0=cane 1=gatto
+        path = os.path.join(DATADIR, category)  # crea un percorso ai cani e gatti
+        class_num = CATEGORIES.index(
+            category
+        )  # ricevi una classificazione (0 o 1). 0=cane 1=gatto
         for img in tqdm(os.listdir(path)):  # itera per ogni immagine di cani e gatti
             try:
-                img_array = cv2.imread(os.path.join(path,img) ,cv2.IMREAD_GRAYSCALE)  # converti in array
-                new_array = cv2.resize(img_array, (IMG_SIZE, IMG_SIZE))  # normalizza i dati
-                training_data.append([new_array, class_num])  # aggiungi ai dati di allenamento
+                img_array = cv2.imread(
+                    os.path.join(path, img), cv2.IMREAD_GRAYSCALE
+                )  # converti in array
+                new_array = cv2.resize(
+                    img_array, (IMG_SIZE, IMG_SIZE)
+                )  # normalizza i dati
+                training_data.append(
+                    [new_array, class_num]
+                )  # aggiungi ai dati di allenamento
             except Exception as e:  # meglio prevenire che curare
                 pass
-    random.shuffle(training_data)  # mischia i dati per evitare che il modello venga allenato male
+    random.shuffle(
+        training_data
+    )  # mischia i dati per evitare che il modello venga allenato male
     return training_data
+
 
 def train():
     x = []
@@ -56,29 +76,32 @@ def train():
     y = np.array(y)
     model = Sequential()
     model.add(Conv2D(64, (3, 3), input_shape=x.shape[1:]))
-    model.add(Activation('relu'))
+    model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     # 3 conv layers -- START --
     # 1:
     model.add(Conv2D(64, (3, 3)))
-    model.add(Activation('relu'))
+    model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     # 2:
     model.add(Conv2D(64, (3, 3)))
-    model.add(Activation('relu'))
+    model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     # 3:
     model.add(Conv2D(64, (3, 3)))
-    model.add(Activation('relu'))
+    model.add(Activation("relu"))
     model.add(MaxPooling2D(pool_size=(2, 2)))
     # 3 conv layers -- END --
-    model.add(Flatten())  # questo converte la nostra mappa delle feature in 3D ad un vettore di feature in 1D
+    model.add(
+        Flatten()
+    )  # questo converte la nostra mappa delle feature in 3D ad un vettore di feature in 1D
     model.add(Dense(1))
-    model.add(Activation('sigmoid'))
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.add(Activation("sigmoid"))
+    model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
     model.fit(x, y, batch_size=32, epochs=10, validation_split=0.3)
     model.save("cat_or_dog.model")
     return model
+
 
 def get_model():
     if not os.path.exists("cat_or_dog.model"):
@@ -86,6 +109,7 @@ def get_model():
     else:
         model = tf.keras.models.load_model("cat_or_dog.model")
     return model
+
 
 def predict(model: Sequential, filepath):
     prediction = model.predict([prepare_data(filepath)])
@@ -100,6 +124,7 @@ def test():
     print(f"Type expected: Dog; Acc: {prediction[1].dog * 100: .2f}%")
     prediction = predict(model, "./cat_0.jpg")
     print(f"Type expected: Cat; Acc: {prediction[1].cat * 100: .2f}%")
+
 
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
