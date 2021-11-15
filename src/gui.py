@@ -1,67 +1,119 @@
-import wx
+import tkinter as tk
+from tkinter import *
+from tkinter import ttk
+from tkinter import filedialog as fd
+from PIL import ImageTk, Image
 
-class HelloFrame(wx.Frame):
+title = "È un Gatto o un Cane?"
+app_ver = "0.5"
+authors = "Lucci Marco, Peshko Artur, Zucaro Simone"
 
-    def __init__(self, *args, **kw):
-        super(HelloFrame, self).__init__(*args, **kw)
-
-        pnl = wx.Panel(self)
-
-        st = wx.StaticText(pnl, label="Hello World!")
-        font = st.GetFont()
-        font.PointSize += 10
-        font = font.Bold()
-        st.SetFont(font)
-
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        sizer.Add(st, wx.SizerFlags().Border(wx.TOP|wx.LEFT, 25))
-        pnl.SetSizer(sizer)
-
-        self.makeMenuBar()
-
-        self.CreateStatusBar()
-        self.SetStatusText("Welcome to wxPython!")
+root = tk.Tk()
+root.resizable(0, 0)
+root.geometry("900x900")
+root.title(title + " v" + app_ver)
+root.iconphoto(False, tk.PhotoImage(file ="img/logo.ico"))
+root.columnconfigure(0, weight = 1)
 
 
-    def makeMenuBar(self):
+# GUI Title
+titleTxt = ttk.Label(
+    root,
+    text = title,
+    font = ("Futura", 25, "bold")
+)
+titleTxt.grid(
+    pady = (60, 60),
+)
 
-        fileMenu = wx.Menu()
+# Display img on the GUI
+def addImg(source):
+    img = Image.open(source)
+    img = img.resize( (650, 450), Image.ANTIALIAS)
+    img = ImageTk.PhotoImage(img)
+    panel = ttk.Label(root,
+                  image = img
+                 )
+    panel.grid(column = 0, row = 1, pady = (0, 15) )
+    panel.image = img
 
-        helloItem = fileMenu.Append(-1, "&Hello...\tCtrl-H",
-                "Help string shown in status bar for this menu item")
-        fileMenu.AppendSeparator()
+addImg("img/placeholder1.png") # Init the img frame
 
-        exitItem = fileMenu.Append(wx.ID_EXIT)
+# Selct the img from computer
+def selectImg():
+    file = fd.askopenfilename()
+    addImg(file)
+    ai_result("Cane")
+    ai_percent("47%")
 
-        helpMenu = wx.Menu()
-        aboutItem = helpMenu.Append(wx.ID_ABOUT)
+# Reset the img output
+def clear():
+    addImg("img/placeholder1.png")
+    ai_result("Risultato")
+    ai_percent("--%")
 
-        menuBar = wx.MenuBar()
-        menuBar.Append(fileMenu, "&File")
-        menuBar.Append(helpMenu, "&Help")
+# Display the results
+result_default = StringVar()
+result_default.set("Risultato")
+def ai_result(result):
+    result_default.set(result)
 
-        self.SetMenuBar(menuBar)
+# Display the percentage
+perc_default = StringVar()
+perc_default.set("--%")
+def ai_percent(perc):
+    perc_default.set(perc)
 
-        self.Bind(wx.EVT_MENU, self.OnHello, helloItem)
-        self.Bind(wx.EVT_MENU, self.OnExit,  exitItem)
-        self.Bind(wx.EVT_MENU, self.OnAbout, aboutItem)
+# Select Image button
+select_button = ttk.Button(
+    root,
+    text = "Seleziona l'immagine",
+    width = 35,
+    command = selectImg
+).grid(
+    pady = (35, 10)
+)
+
+# Reset Image button
+clear_button = ttk.Button(
+    root,
+    text = "Deseleziona l'immagine",
+    width = 35,
+    command = clear
+).grid(
+)
+
+# Label for results
+aiLabel = ttk.Label(
+    root,
+    textvariable = result_default,
+    font = ("Futura", 14),
+    width = 18
+).grid(
+    pady = (30, 0)
+)
+
+# Label for percentage
+aiPercent = ttk.Label(
+    root,
+    textvariable = perc_default,
+    font = ("Futura", 14),
+    width = 18
+).grid(
+    pady = (0, 10)
+)
+
+# Credits label
+creditsTxt = ttk.Label(
+    root,
+    text = title + " v" + app_ver + " - " + authors,
+    font = ("Helvetica", 7),
+    padding = 4
+)
+creditsTxt.grid(
+    pady=82,
+    sticky=E
+)
 
 
-    def OnExit(self, event):
-        self.Close(True)
-
-
-    def OnHello(self, event):
-        wx.MessageBox("Hello again from wxPython")
-
-
-    def OnAbout(self, event):
-        wx.MessageBox("This is a wxPython Hello World sample",
-                      "About Hello World 2",
-                      wx.OK|wx.ICON_INFORMATION)
-
-
-app = wx.App()
-frm = HelloFrame(None, title='Hello World 2')
-frm.Show()
-app.MainLoop()
+root.mainloop()
