@@ -5,9 +5,10 @@ from tkinter import filedialog as fd
 from PIL import ImageTk, Image
 from multiprocessing.pool import ThreadPool
 from model import CATEGORIES, get_model, predict
+from playsound import playsound
 
 title = "Cat or Dog"
-app_ver = "0.7"
+app_ver = "0.75"
 authors = "Lucci Marco, Peshko Artur, Zucaro Simone"
 CATEGORIES = {
     "Dog": "Cane",
@@ -48,6 +49,7 @@ def selectImg():
     model = model_async.get()
     prediction = predict(model, file)
     acc = prediction[1].cat if prediction[0] == "Cat" else prediction[1].dog
+    playsound(str(CATEGORIES[prediction[0]]) + '.mp3') # Fa partire il suono del rispettivo file in base al risultato (Cane.mp3 o Gatto.mp3)
     ai_result(CATEGORIES[prediction[0]])
     ai_percent(acc)
 
@@ -109,3 +111,4 @@ creditsTxt.grid(pady=(30, 0))
 
 
 root.mainloop()
+
