@@ -98,7 +98,7 @@ def train():
     model.add(Dense(1))
     model.add(Activation("sigmoid"))
     model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
-    model.fit(x, y, batch_size=32, epochs=10, validation_split=0.3)
+    model.fit(x, y, batch_size=32, epochs=10)
     model.save("cat_or_dog.model")
     return model
 
